@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>bar_chart</title>
+  <style>
+  .chart rect{
+    fill: steelblue;
+  }
+  .chart text{
+    fill: white;
+    font: 10px sans-serif;
+    text-anchor: end;
+  }
+	.bar{
+		fill: steelblue;
+	}
+	.axis text{
+		font: 10px sans-serif;
+	}
+	.axis path,
+	.axis line{
+		fill: none;
+		stroke: #000;
+		shape-rendering: crispEdges;
+	}
+	.x.axis path{
+		display: none;
+	}
+  </style>
+</head>
+<body style="background-color: #666">
+  <svg class="chart"></svg>
+  <script src="./dist/bar_chart_vertical.bundle.js"></script>
+</body>
+</html>

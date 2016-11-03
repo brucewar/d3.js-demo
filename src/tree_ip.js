@@ -81,14 +81,13 @@ var webPage = {
 		    //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 		var svg = container.append("g").attr('class', 'tree');
 
-		// 获取树的root
-		getData({name: 'root'}, function(json){
-			root = json;
-			root.x0 = (height - margin.left - margin.right) / 2;
-			root.y0 = (width - margin.top - margin.bottom) / 2;
+		root = {
+			destIp: '172.20.1.1'
+		};
+		root.x0 = (height - margin.left - margin.right) / 2;
+		root.y0 = (width - margin.top - margin.bottom) / 2;
 
-			update(root);
-		});
+		update(root);
 
 		function update(source) {
 		  var duration = d3.event && d3.event.altKey ? 5000 : 500;
@@ -114,7 +113,7 @@ var webPage = {
 		      .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
 		      .on("click", click)
 					.on('mouseover', function(d){
-						if(d.name == 'more') return;
+						if(d.more) return;
 						this.timeout = setTimeout(function(){
 							var $tooltip = $('#tooltip');
 							$tooltip.find('.loader').show();
@@ -129,7 +128,7 @@ var webPage = {
 						});
 					})
 					.on('mouseout', function(d){
-						if(d.name == 'more') return;
+						if(d.more) return;
 						clearTimeout(this.timeout);
 						$('#tooltip').hide();
 					});
@@ -144,7 +143,7 @@ var webPage = {
 		      .attr("dy", ".35em")
 					.attr('pointer-events', 'none')
 		      .attr("text-anchor", 'end')
-		      .text(function(d) { return d.name == 'more' ? '' : d.name; })
+		      .text(function(d) { return d.more ? '' : d.destIp; })
 		      .style("fill-opacity", 1e-6);
 
 			nodeEnter.append('text')
@@ -152,7 +151,7 @@ var webPage = {
 					.attr('text-anchor', 'middle')
 					.attr('dy', '.3em')
 					.text(function(d){
-						return d.name == 'more' ? '+' : 'IP';
+						return d.more ? '+' : 'IP';
 					});
 
 		  // Transition nodes to their new position.
@@ -177,7 +176,7 @@ var webPage = {
 		  var nodeExit = node.exit().transition()
 		      .duration(duration)
 		      .attr("transform", function(d) {
-						if(d.name == 'more') this.remove();
+						if(d.more) this.remove();
 						return "translate(" + source.y + "," + source.x + ")";
 					})
 		      .remove();
@@ -214,7 +213,7 @@ var webPage = {
 		  link.exit().transition()
 		      .duration(duration)
 		      .attr("d", function(d) {
-						if(d.target.name == 'more') this.remove();
+						if(d.target.more) this.remove();
 		        var o = {x: source.x, y: source.y};
 		        return diagonal({source: o, target: o});
 		      })
@@ -233,13 +232,13 @@ var webPage = {
 			delete d.children;
 		}
 		function expand(d){
-			getData({name: d.name}, function(json){
-				if(json && json.children){
+			getData({destIp: d.destIp}, function(data){
+				if(data && data.length){
 					// 获取到此节点有子节点
-					d._children = json.children;
+					d._children = data;
 					d.children = d._children.slice(0, limit);
 					if(d._children.length > d.children.length){
-						d.children.push({'name': 'more'});
+						d.children.push({more: true});
 					}
 				}
 				d.isExpand = true;
@@ -249,17 +248,19 @@ var webPage = {
 
 		// 异步获取数据
 		function getData(sd, cb){
-			d3.json('data/async_city.json', function(err, json){
-				cb && cb(json[sd.name]);
+			d3.json('data/ip.json', function(err, json){
+				cb && cb(json.filter(function(item){
+					return item.srcIp == sd.destIp;
+				}));
 			});
 		}
 
 		function click(d){
-			if(d.name == 'more'){
+			if(d.more){
 				// 点击更多
 				d.parent.children = d.parent._children.slice(0, (d.parent.children.length - 1) + limit);
 				if(d.parent._children.length > d.parent.children.length){
-					d.parent.children.push({'name': 'more'});
+					d.parent.children.push({more: true});
 				}
 				update(d.parent);
 			}else if(d.isExpand && d.children){
